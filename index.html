@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harindu Accountancy Service</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+</head>
+<body>
+
+  <h1>Welcome to Harindu Accountancy Service</h1>
+
+  <button id="bookAppointmentBtn">Book Appointment</button>
+  <button id="inquiryBtn">Submit Inquiry</button>
+
+  <!-- Appointment Modal -->
+  <div id="appointmentModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeAppointment">&times;</span>
+      <h2>Book Your Appointment</h2>
+      <input type="date" id="appointmentDate">
+      <button id="confirmAppointment">Confirm</button>
+    </div>
+  </div>
+
+  <!-- Inquiry Modal -->
+  <div id="inquiryModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeInquiry">&times;</span>
+      <h2>Submit Your Inquiry</h2>
+      <input type="text" id="inquiryMessage" placeholder="Your message">
+      <button id="submitInquiry">Send Inquiry</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
