@@ -626,9 +626,11 @@
   </footer>
 
   <!-- Appointment Modal -->
-  <div id="appointmentModal" class="modal">
-    <div class="modal-content">
-      <span class="close" id="closeAppointment">&times;</span>
+<!-- Appointment Modal -->
+<div id="appointmentModal" class="modal">
+  <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+    <span class="close" id="closeAppointment">&times;</span>
+    <div id="appointmentFormContainer">
       <h2>Book Your Appointment</h2>
       <form id="appointmentForm">
         <div class="form-group">
@@ -645,7 +647,14 @@
         </div>
         <div class="form-group">
           <label for="appointmentDate">Preferred Date</label>
-          <input type="date" id="appointmentDate" required>
+          <input type="date" id="appointmentDate" required min="">
+        </div>
+        <div class="form-group">
+          <label>Available Time Slots</label>
+          <div class="time-slots" id="timeSlots" style="max-height: 200px; overflow-y: auto;">
+            <!-- Time slots will be generated here by JavaScript -->
+            <p style="padding: 20px; text-align: center;">Please select a date to see available time slots</p>
+          </div>
         </div>
         <div class="form-group">
           <label for="appointmentService">Service Needed</label>
@@ -657,11 +666,21 @@
             <option value="other">Other</option>
           </select>
         </div>
-        <button type="submit" class="btn">Confirm Appointment</button>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="smsNotification" checked> Receive SMS notification
+          </label>
+        </div>
+        <button type="submit" class="btn" style="margin-top: 20px;">Confirm Appointment</button>
       </form>
     </div>
+    <div id="confirmationMessage" class="confirmation-message">
+      <h3>Appointment Booked Successfully!</h3>
+      <div class="confirmation-details" id="confirmationDetails"></div>
+      <button class="btn" id="returnHome">Return to Home</button>
+    </div>
   </div>
-
+</div>
   <!-- Inquiry Modal -->
   <div id="inquiryModal" class="modal">
     <div class="modal-content">
