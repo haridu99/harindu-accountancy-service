@@ -810,5 +810,38 @@
       });
     };
   </script>
+
+  // PASTE THIS IN YOUR JAVASCRIPT FILE
+document.getElementById('appointmentDate').addEventListener('change', function() {
+  const date = this.value;
+  const isUrgent = document.getElementById('urgentBooking').checked;
+  const timePreference = document.getElementById('timePreference').value;
+  
+  // Generate suggested times based on preferences
+  const suggestedTimes = suggestTimes(date, isUrgent, timePreference);
+  showSuggestedTimes(suggestedTimes);
+});
+
+function suggestTimes(date, isUrgent, timePreference) {
+  // Logic to pick best times (customize as needed)
+  if (isUrgent) {
+    return ["09:00", "09:30", "10:00"]; // Early slots for urgent
+  } else if (timePreference === "morning") {
+    return ["09:00", "10:00", "11:00"];
+  } else {
+    return ["14:00", "15:00", "16:00"];
+  }
+}
+
+function showSuggestedTimes(times) {
+  const container = document.getElementById('timeSlots');
+  container.innerHTML = `
+    <div class="suggested-times">
+      <h4>⭐ Recommended for you:</h4>
+      ${times.map(time => `<div class="time-slot suggested">${time}</div>`).join('')}
+      <h4>All Available Slots:</h4>
+    </div>
+  `;
+}
 </body>
 </html>
