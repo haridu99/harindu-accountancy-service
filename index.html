@@ -692,7 +692,6 @@
           <div class="form-group">
             <label>Available Time Slots</label>
             <div class="time-slots" id="timeSlots">
-              <!-- Time slots will be generated here by JavaScript -->
               <p style="padding: 20px; text-align: center;">Please select a date to see available time slots</p>
             </div>
           </div>
@@ -736,9 +735,9 @@
       <div class="contact-container">
         <div class="contact-info">
           <h3>Our Office</h3>
-          <p><i class="fas fa-map-marker-alt"></i> 96 Y/T, Bandaranayaka Mawatha, Ratnapura</p>
-          <p><i class="fas fa-envelope"></i> harinduchathuranga1234@gmail.com</p>
-          <p><i class="fas fa-phone"></i> +94722235497, +94767649450</p>
+          <p><i class="fas fa-map-marker-alt"></i> 96 Y/T, Bundesmayeriee Meweiha, Rafimupura</p>
+          <p><i class="fas fa-envelope"></i> hurinduchathuemgui124@gmail.com</p>
+          <p><i class="fas fa-phone"></i> +84722255697, +84703355886</p>
         </div>
         <div class="contact-form">
           <form id="inquiryForm">
@@ -786,9 +785,9 @@
         <div class="footer-column">
           <h3>Contact Info</h3>
           <ul>
-            <li><i class="fas fa-map-marker-alt"></i> 96 Y/T, Bandaranayaka Mawatha, Ratnapura</li>
-            <li><i class="fas fa-envelope"></i> harinduchathuranga1234@gmail.com</li>
-            <li><i class="fas fa-phone"></i> +94722235497, +94767649450</li>
+            <li><i class="fas fa-map-marker-alt"></i> 96 Y/T, Bundesmayeriee Meweiha, Rafimupura</li>
+            <li><i class="fas fa-envelope"></i> hurinduchathuemgui124@gmail.com</li>
+            <li><i class="fas fa-phone"></i> +84722255697, +84703355886</li>
           </ul>
         </div>
         <div class="footer-column">
@@ -830,9 +829,26 @@
     </div>
   </div>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
   <script>
-    // Initialize EmailJS
-    emailjs.init("n6K9LBhUPgP6X1piC"); // Replace with your EmailJS user ID
+    // Initialize EmailJS with your user ID
+    emailjs.init("n6K9LBhUPgP6X1piC");
+    
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCsdHxQtZEi9z5Trm-_1CHEkGsahBMCF4w",
+      authDomain: "harindu-accountancy.firebaseapp.com",
+      projectId: "harindu-accountancy",
+      storageBucket: "harindu-accountancy.appspot.com",
+      messagingSenderId: "1019388452097",
+      appId: "1:1019388452097:web:011307bc2c8d28e767cf00"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
     
     // Set minimum date for appointment (today)
     document.addEventListener('DOMContentLoaded', function() {
@@ -841,21 +857,6 @@
       
       // Hide confirmation message initially
       document.getElementById('confirmationMessage').style.display = 'none';
-      
-      // Initialize Firebase (replace with your config)
-      const firebaseConfig = {
-        apiKey: "AIzaSyYOUR_API_KEY",
-        authDomain: "your-project-id.firebaseapp.com",
-        databaseURL: "https://your-project-id.firebaseio.com",
-        projectId: "your-project-id",
-        storageBucket: "your-project-id.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-      };
-      
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
     });
     
     // Generate time slots when date is selected
@@ -878,34 +879,42 @@
           }
         }
         
-        // Randomly mark some slots as booked for demonstration
-        const bookedSlots = [];
-        for (let i = 0; i < 3; i++) {
-          const randomIndex = Math.floor(Math.random() * timeSlots.length);
-          bookedSlots.push(timeSlots[randomIndex]);
-        }
-        
-        // Display time slots
-        timeSlotsContainer.innerHTML = '';
-        timeSlots.forEach(time => {
-          const timeSlot = document.createElement('div');
-          timeSlot.className = bookedSlots.includes(time) ? 'time-slot booked' : 'time-slot';
-          timeSlot.textContent = time;
-          
-          if (!bookedSlots.includes(time)) {
-            timeSlot.addEventListener('click', function() {
-              // Remove selected class from all time slots
-              document.querySelectorAll('.time-slot').forEach(slot => {
-                slot.classList.remove('selected');
-              });
-              // Add selected class to clicked time slot
-              this.classList.add('selected');
+        // Check Firestore for booked slots
+        db.collection("appointments")
+          .where("date", "==", date)
+          .get()
+          .then((querySnapshot) => {
+            const bookedSlots = [];
+            querySnapshot.forEach((doc) => {
+              bookedSlots.push(doc.data().time);
             });
-          }
-          
-          timeSlotsContainer.appendChild(timeSlot);
-        });
-      }, 1000);
+            
+            // Display time slots
+            timeSlotsContainer.innerHTML = '';
+            timeSlots.forEach(time => {
+              const timeSlot = document.createElement('div');
+              timeSlot.className = bookedSlots.includes(time) ? 'time-slot booked' : 'time-slot';
+              timeSlot.textContent = time;
+              
+              if (!bookedSlots.includes(time)) {
+                timeSlot.addEventListener('click', function() {
+                  // Remove selected class from all time slots
+                  document.querySelectorAll('.time-slot').forEach(slot => {
+                    slot.classList.remove('selected');
+                  });
+                  // Add selected class to clicked time slot
+                  this.classList.add('selected');
+                });
+              }
+              
+              timeSlotsContainer.appendChild(timeSlot);
+            });
+          })
+          .catch((error) => {
+            console.error("Error getting booked slots: ", error);
+            timeSlotsContainer.innerHTML = '<p style="padding: 20px; text-align: center; color: var(--accent-color);">Error loading time slots. Please try again.</p>';
+          });
+      }, 500);
     });
     
     // Cancel button functionality
@@ -951,9 +960,7 @@
         <p><strong>SMS Notification:</strong> ${smsNotification ? 'Yes' : 'No'}</p>
       `;
       
-      // In a real app, you would save to Firebase here
-      // For example:
-      /*
+      // Save to Firestore
       db.collection("appointments").add({
         name: name,
         email: email,
@@ -964,25 +971,10 @@
         smsNotification: smsNotification,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       })
-      .then(() => {
+      .then((docRef) => {
+        console.log("Document written with ID: ", docRef.id);
         // Then send email
-        emailjs.send("service_502lusl", "template_ovsafcd", {
-  name: name,
-  email: email,
-  phone: phone,
-  date: date,
-  time: time,
-  service: service,
-  sms_notification: smsNotification ? 'Yes' : 'No',
-  to_email: "harinduchathuranga1234@gmail.com"  // Your receiving email
-        });
-      })
-      */
-      
-      // For this demo, we'll just simulate the Firebase save
-      setTimeout(() => {
-        // Send email using EmailJS
-        emailjs.send("service_502lusl", "template_8z7x4qj", {
+        return emailjs.send("service_502lusl", "template_ovsafcd", {
           name: name,
           email: email,
           phone: phone,
@@ -991,24 +983,25 @@
           service: service,
           sms_notification: smsNotification ? 'Yes' : 'No',
           to_email: "harinduchathuranga1234@gmail.com"
-      
-        }).then(() => {
-          // Hide spinner
-          document.getElementById('formSpinner').style.display = 'none';
-          
-          // Show confirmation message
-          document.getElementById('appointmentForm').style.display = 'none';
-          document.getElementById('confirmationMessage').style.display = 'block';
-          document.getElementById('confirmationDetails').innerHTML = appointmentDetails;
-          
-          // Scroll to confirmation message
-          document.getElementById('confirmationMessage').scrollIntoView({ behavior: 'smooth' });
-        }).catch((error) => {
-          console.error("Error sending email:", error);
-          alert("There was an error booking your appointment. Please try again.");
-          document.getElementById('formSpinner').style.display = 'none';
         });
-      }, 1500);
+      })
+      .then(() => {
+        // Hide spinner
+        document.getElementById('formSpinner').style.display = 'none';
+        
+        // Show confirmation message
+        document.getElementById('appointmentForm').style.display = 'none';
+        document.getElementById('confirmationMessage').style.display = 'block';
+        document.getElementById('confirmationDetails').innerHTML = appointmentDetails;
+        
+        // Scroll to confirmation message
+        document.getElementById('confirmationMessage').scrollIntoView({ behavior: 'smooth' });
+      })
+      .catch((error) => {
+        console.error("Error adding document or sending email: ", error);
+        alert("There was an error booking your appointment. Please try again.");
+        document.getElementById('formSpinner').style.display = 'none';
+      });
     });
     
     // New appointment button
@@ -1022,14 +1015,14 @@
       document.getElementById('appointmentForm').scrollIntoView({ behavior: 'smooth' });
     });
     
-    // Inquiry form submission
+    // Inquiry form submission (modal)
     document.getElementById('inquiryFormModal').addEventListener('submit', function(e) {
       e.preventDefault();
       const name = document.getElementById('inquiryName').value;
       const email = document.getElementById('inquiryEmail').value;
       const message = document.getElementById('inquiryMessage').value;
       
-      emailjs.send("service_502lusl", "template_8z7x4qj", {
+      emailjs.send("service_502lusl", "template_ovsafcd", {
         name: name,
         email: email,
         message: message,
@@ -1053,7 +1046,7 @@
       const phone = document.getElementById('phone').value;
       const message = document.getElementById('message').value;
       
-      emailjs.send("service_502lusl", "template_8z7x4qj", {
+      emailjs.send("service_502lusl", "template_ovsafcd", {
         firstName: firstName,
         lastName: lastName,
         email: email,
@@ -1081,23 +1074,5 @@
       }
     };
   </script>
-  
-  <!-- Firebase SDK (you need to add this) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCsdHxQtZEi9z5Trm-_1CHEkGsahBMCF4w",
-    authDomain: "harindu-accountancy.firebaseapp.com",
-    projectId: "harindu-accountancy",
-    storageBucket: "harindu-accountancy.appspot.com",
-    messagingSenderId: "1019388452097",
-    appId: "1:1019388452097:web:011307bc2c8d28e767cf00"
-  };
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-</script>
 </body>
 </html>
