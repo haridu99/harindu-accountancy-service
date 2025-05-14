@@ -132,6 +132,17 @@
       background-color: #c0392b;
     }
     
+    .btn-outline {
+      background-color: transparent;
+      border: 1px solid var(--secondary-color);
+      color: var(--secondary-color);
+    }
+    
+    .btn-outline:hover {
+      background-color: var(--secondary-color);
+      color: white;
+    }
+    
     /* Services Section */
     .services {
       padding: 5rem 0;
@@ -296,6 +307,12 @@
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
     
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+    
     /* Footer */
     footer {
       background-color: var(--dark-color);
@@ -435,6 +452,13 @@
       border-color: var(--secondary-color);
     }
     
+    .time-slot.booked {
+      background-color: #f5f5f5;
+      color: #999;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    
     /* Confirmation Message */
     .confirmation-message {
       display: none;
@@ -454,6 +478,23 @@
       margin: 1rem 0;
     }
     
+    /* Loading Spinner */
+    .spinner {
+      display: none;
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 4px solid var(--secondary-color);
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
     /* Responsive Styles */
     @media (max-width: 768px) {
       .features-content,
@@ -471,6 +512,15 @@
       
       .time-slots {
         grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      }
+      
+      .form-actions {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .form-actions .btn {
+        width: 100%;
       }
     }
   </style>
@@ -661,7 +711,11 @@
               <input type="checkbox" id="smsNotification" checked> Receive SMS notification
             </label>
           </div>
-          <button type="submit" class="btn">Confirm Appointment</button>
+          <div class="form-actions">
+            <button type="button" id="cancelAppointment" class="btn btn-outline">Cancel</button>
+            <button type="submit" class="btn">Confirm Appointment</button>
+          </div>
+          <div class="spinner" id="formSpinner"></div>
         </form>
         <div id="confirmationMessage" class="confirmation-message">
           <h3>Appointment Booked Successfully!</h3>
@@ -787,6 +841,21 @@
       
       // Hide confirmation message initially
       document.getElementById('confirmationMessage').style.display = 'none';
+      
+      // Initialize Firebase (replace with your config)
+      const firebaseConfig = {
+        apiKey: "AIzaSyYOUR_API_KEY",
+        authDomain: "your-project-id.firebaseapp.com",
+        databaseURL: "https://your-project-id.firebaseio.com",
+        projectId: "your-project-id",
+        storageBucket: "your-project-id.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
+      
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
     });
     
     // Generate time slots when date is selected
@@ -794,31 +863,59 @@
       const date = this.value;
       const timeSlotsContainer = document.getElementById('timeSlots');
       
-      // Generate time slots (every 30 minutes from 9am to 5pm)
-      const timeSlots = [];
-      for (let hour = 9; hour <= 17; hour++) {
-        timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
-        if (hour < 17) {
-          timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
-        }
-      }
+      // Show loading state
+      timeSlotsContainer.innerHTML = '<p style="padding: 20px; text-align: center;">Loading available slots...</p>';
       
-      // Display time slots
-      timeSlotsContainer.innerHTML = '';
-      timeSlots.forEach(time => {
-        const timeSlot = document.createElement('div');
-        timeSlot.className = 'time-slot';
-        timeSlot.textContent = time;
-        timeSlot.addEventListener('click', function() {
-          // Remove selected class from all time slots
-          document.querySelectorAll('.time-slot').forEach(slot => {
-            slot.classList.remove('selected');
-          });
-          // Add selected class to clicked time slot
-          this.classList.add('selected');
+      // In a real app, you would check Firebase for booked slots for this date
+      // For this example, we'll simulate checking booked slots
+      setTimeout(() => {
+        // Generate time slots (every 30 minutes from 9am to 5pm)
+        const timeSlots = [];
+        for (let hour = 9; hour <= 17; hour++) {
+          timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
+          if (hour < 17) {
+            timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
+          }
+        }
+        
+        // Randomly mark some slots as booked for demonstration
+        const bookedSlots = [];
+        for (let i = 0; i < 3; i++) {
+          const randomIndex = Math.floor(Math.random() * timeSlots.length);
+          bookedSlots.push(timeSlots[randomIndex]);
+        }
+        
+        // Display time slots
+        timeSlotsContainer.innerHTML = '';
+        timeSlots.forEach(time => {
+          const timeSlot = document.createElement('div');
+          timeSlot.className = bookedSlots.includes(time) ? 'time-slot booked' : 'time-slot';
+          timeSlot.textContent = time;
+          
+          if (!bookedSlots.includes(time)) {
+            timeSlot.addEventListener('click', function() {
+              // Remove selected class from all time slots
+              document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('selected');
+              });
+              // Add selected class to clicked time slot
+              this.classList.add('selected');
+            });
+          }
+          
+          timeSlotsContainer.appendChild(timeSlot);
         });
-        timeSlotsContainer.appendChild(timeSlot);
-      });
+      }, 1000);
+    });
+    
+    // Cancel button functionality
+    document.getElementById('cancelAppointment').addEventListener('click', function() {
+      // Reset form
+      document.getElementById('appointmentForm').reset();
+      document.getElementById('timeSlots').innerHTML = '<p style="padding: 20px; text-align: center;">Please select a date to see available time slots</p>';
+      
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
     
     // Appointment form submission
@@ -840,6 +937,9 @@
       }
       const time = selectedTimeSlot.textContent;
       
+      // Show loading spinner
+      document.getElementById('formSpinner').style.display = 'block';
+      
       // Prepare appointment details
       const appointmentDetails = `
         <p><strong>Name:</strong> ${name}</p>
@@ -851,28 +951,63 @@
         <p><strong>SMS Notification:</strong> ${smsNotification ? 'Yes' : 'No'}</p>
       `;
       
-      // Send email using EmailJS
-      emailjs.send("service_502lusl", "template_8z7x4qj", {
+      // In a real app, you would save to Firebase here
+      // For example:
+      /*
+      db.collection("appointments").add({
         name: name,
         email: email,
         phone: phone,
         date: date,
         time: time,
         service: service,
-        sms_notification: smsNotification ? 'Yes' : 'No',
-        to_email: "harinduchathuranga1234@gmail.com"
-      }).then(() => {
-        // Show confirmation message
-        document.getElementById('appointmentForm').style.display = 'none';
-        document.getElementById('confirmationMessage').style.display = 'block';
-        document.getElementById('confirmationDetails').innerHTML = appointmentDetails;
-        
-        // Scroll to confirmation message
-        document.getElementById('confirmationMessage').scrollIntoView({ behavior: 'smooth' });
-      }).catch((error) => {
-        console.error("Error sending email:", error);
-        alert("There was an error booking your appointment. Please try again.");
-      });
+        smsNotification: smsNotification,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        // Then send email
+        emailjs.send("service_502lusl", "template_ovsafcd", {
+  name: name,
+  email: email,
+  phone: phone,
+  date: date,
+  time: time,
+  service: service,
+  sms_notification: smsNotification ? 'Yes' : 'No',
+  to_email: "hurinduchathuemgui124@gmail.com"  // Your receiving email
+        });
+      })
+      */
+      
+      // For this demo, we'll just simulate the Firebase save
+      setTimeout(() => {
+        // Send email using EmailJS
+        emailjs.send("service_502lusl", "template_8z7x4qj", {
+          name: name,
+          email: email,
+          phone: phone,
+          date: date,
+          time: time,
+          service: service,
+          sms_notification: smsNotification ? 'Yes' : 'No',
+          to_email: "harinduchathuranga1234@gmail.com"
+        }).then(() => {
+          // Hide spinner
+          document.getElementById('formSpinner').style.display = 'none';
+          
+          // Show confirmation message
+          document.getElementById('appointmentForm').style.display = 'none';
+          document.getElementById('confirmationMessage').style.display = 'block';
+          document.getElementById('confirmationDetails').innerHTML = appointmentDetails;
+          
+          // Scroll to confirmation message
+          document.getElementById('confirmationMessage').scrollIntoView({ behavior: 'smooth' });
+        }).catch((error) => {
+          console.error("Error sending email:", error);
+          alert("There was an error booking your appointment. Please try again.");
+          document.getElementById('formSpinner').style.display = 'none';
+        });
+      }, 1500);
     });
     
     // New appointment button
@@ -881,6 +1016,9 @@
       document.getElementById('confirmationMessage').style.display = 'none';
       document.getElementById('appointmentForm').reset();
       document.getElementById('timeSlots').innerHTML = '<p style="padding: 20px; text-align: center;">Please select a date to see available time slots</p>';
+      
+      // Scroll to form
+      document.getElementById('appointmentForm').scrollIntoView({ behavior: 'smooth' });
     });
     
     // Inquiry form submission
@@ -942,5 +1080,23 @@
       }
     };
   </script>
+  
+  <!-- Firebase SDK (you need to add this) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCsdHxQtZEi9z5Trm-_1CHEkGsahBMCF4w",
+    authDomain: "harindu-accountancy.firebaseapp.com",
+    projectId: "harindu-accountancy",
+    storageBucket: "harindu-accountancy.appspot.com",
+    messagingSenderId: "1019388452097",
+    appId: "1:1019388452097:web:011307bc2c8d28e767cf00"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
 </body>
 </html>
