@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Harindu Accountancy Service</title>
+  <!-- Updated EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <style>
     :root {
       --primary-color: #2c3e50;
@@ -735,9 +738,9 @@
       <div class="contact-container">
         <div class="contact-info">
           <h3>Our Office</h3>
-          <p><i class="fas fa-map-marker-alt"></i> 96 Y/T, Bundesmayeriee Meweiha, Rafimupura</p>
-          <p><i class="fas fa-envelope"></i> hurinduchathuemgui124@gmail.com</p>
-          <p><i class="fas fa-phone"></i> +84722255697, +84703355886</p>
+          <p><i class="fas fa-map-marker-alt"></i> 96 Y/T, Bandaranayake Mawatha, Rathnapura</p>
+          <p><i class="fas fa-envelope"></i> harinduchathuranga1234@gmail.com</p>
+          <p><i class="fas fa-phone"></i> +947222354977, +94767649450</p>
         </div>
         <div class="contact-form">
           <form id="inquiryForm">
@@ -829,15 +832,24 @@
     </div>
   </div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
   <script>
+    // ======================================================================
+    // EMAILJS CONFIGURATION - START
+    // ======================================================================
     // Initialize EmailJS with your user ID
-    emailjs.init("n6K9LBhUPgP6X1piC");
-    
-    // Initialize Firebase
+    (function() {
+      emailjs.init('n6K9LBhUPgP6X1piC');
+      console.log("EmailJS initialized with version:", emailjs.version);
+    })();
+    // ======================================================================
+    // EMAILJS CONFIGURATION - END
+    // ======================================================================
+
+
+    // ======================================================================
+    // FIREBASE CONFIGURATION - START
+    // ======================================================================
+    // Your web app's Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCsdHxQtZEi9z5Trm-_1CHEkGsahBMCF4w",
       authDomain: "harindu-accountancy.firebaseapp.com",
@@ -847,9 +859,14 @@
       appId: "1:1019388452097:web:011307bc2c8d28e767cf00"
     };
     
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    
+    // ======================================================================
+    // FIREBASE CONFIGURATION - END
+    // ======================================================================
+
+
     // Set minimum date for appointment (today)
     document.addEventListener('DOMContentLoaded', function() {
       const today = new Date().toISOString().split('T')[0];
@@ -868,7 +885,6 @@
       timeSlotsContainer.innerHTML = '<p style="padding: 20px; text-align: center;">Loading available slots...</p>';
       
       // In a real app, you would check Firebase for booked slots for this date
-      // For this example, we'll simulate checking booked slots
       setTimeout(() => {
         // Generate time slots (every 30 minutes from 9am to 5pm)
         const timeSlots = [];
@@ -927,7 +943,11 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
     
-    // Appointment form submission
+
+    // ======================================================================
+    // APPOINTMENT BOOKING FUNCTIONALITY - START
+    // This handles both Firebase storage and EmailJS notification
+    // ======================================================================
     document.getElementById('appointmentForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
@@ -973,8 +993,9 @@
       })
       .then((docRef) => {
         console.log("Document written with ID: ", docRef.id);
-        // Then send email
-        return emailjs.send("service_502lusl", "template_ovsafcd", {
+        
+        // Prepare email template parameters
+        const emailParams = {
           name: name,
           email: email,
           phone: phone,
@@ -982,8 +1003,11 @@
           time: time,
           service: service,
           sms_notification: smsNotification ? 'Yes' : 'No',
-          to_email: "harinduchathuranga1234@gmail.com"
-        });
+          to_email: "harinduchathuranga1234@gmail.com" // Your correct email
+        };
+        
+        // Send email using EmailJS
+        return emailjs.send("service_502lusl", "template_ovsafcd", emailParams);
       })
       .then(() => {
         // Hide spinner
@@ -1003,6 +1027,9 @@
         document.getElementById('formSpinner').style.display = 'none';
       });
     });
+    // ======================================================================
+    // APPOINTMENT BOOKING FUNCTIONALITY - END
+    // ======================================================================
     
     // New appointment button
     document.getElementById('newAppointment').addEventListener('click', function() {
@@ -1015,29 +1042,11 @@
       document.getElementById('appointmentForm').scrollIntoView({ behavior: 'smooth' });
     });
     
-    // Inquiry form submission (modal)
-    document.getElementById('inquiryFormModal').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const name = document.getElementById('inquiryName').value;
-      const email = document.getElementById('inquiryEmail').value;
-      const message = document.getElementById('inquiryMessage').value;
-      
-      emailjs.send("service_502lusl", "template_ovsafcd", {
-        name: name,
-        email: email,
-        message: message,
-        to_email: "harinduchathuranga1234@gmail.com"
-      }).then(() => {
-        alert('Inquiry submitted! We will get back to you soon.');
-        document.getElementById('inquiryModal').style.display = 'none';
-        document.getElementById('inquiryFormModal').reset();
-      }).catch((error) => {
-        console.error("Error sending email:", error);
-        alert("There was an error submitting your inquiry. Please try again.");
-      });
-    });
-    
-    // Main contact form submission
+
+    // ======================================================================
+    // CONTACT FORM HANDLING - START
+    // Uses EmailJS to send contact messages
+    // ======================================================================
     document.getElementById('inquiryForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const firstName = document.getElementById('firstName').value;
@@ -1046,22 +1055,32 @@
       const phone = document.getElementById('phone').value;
       const message = document.getElementById('message').value;
       
-      emailjs.send("service_502lusl", "template_ovsafcd", {
+      // Prepare email parameters
+      const emailParams = {
         firstName: firstName,
         lastName: lastName,
         email: email,
         phone: phone,
         message: message,
-        to_email: "harinduchathuranga1234@gmail.com"
-      }).then(() => {
-        alert('Message sent successfully! We will get back to you soon.');
-        document.getElementById('inquiryForm').reset();
-      }).catch((error) => {
-        console.error("Error sending email:", error);
-        alert("There was an error sending your message. Please try again.");
-      });
+        to_email: "harinduchathuranga1234@gmail.com" // Your correct email
+      };
+      
+      // Send email using EmailJS
+      emailjs.send("service_502lusl", "template_ovsafcd", emailParams)
+        .then(() => {
+          alert('Message sent successfully! We will get back to you soon.');
+          document.getElementById('inquiryForm').reset();
+        })
+        .catch((error) => {
+          console.error("Error sending email:", error);
+          alert("There was an error sending your message. Please try again.");
+        });
     });
+    // ======================================================================
+    // CONTACT FORM HANDLING - END
+    // ======================================================================
     
+
     // Modal functionality
     document.getElementById('closeInquiry').onclick = function() {
       document.getElementById('inquiryModal').style.display = 'none';
